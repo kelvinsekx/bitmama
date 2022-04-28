@@ -1,7 +1,13 @@
+import { useEffect } from 'react';
 import logo from './logo.svg';
 import './App.css';
 
 function App() {
+  useEffect(() => {
+    fetch('https://github.com/login/oauth/authorize')
+      .then((res) => console.log(res))
+      .catch((err) => console.log(err));
+  });
   return (
     <div className="App">
       <header className="App-header">
