@@ -1,18 +1,13 @@
 import React from 'react';
 import Context from './context';
 
-const withContext = (WrappedComponent) => {
-  const withHoc = (props) => {
-    return (
+const withContext = (WrappedComponent) => () =>
+  (
+    <>
       <Context.Consumer>
-        {(context) => (
-          <WrappedComponent {...props} context={context} />
-        )}
+        {(context) => <WrappedComponent context={context} />}
       </Context.Consumer>
-    );
-  };
-
-  return withHoc;
-};
+    </>
+  );
 
 export default withContext;
