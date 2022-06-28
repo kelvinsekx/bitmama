@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import ProductItem from './productItem';
-import withContext from '../withContext';
+import Context from './../context';
 
-const ProductList = (props) => {
-  const { products } = props.context;
-
+const ProductList = () => {
+  const { products, addToCart } = useContext(Context);
   return (
     <>
       <div className="hero is-primary">
@@ -20,7 +19,7 @@ const ProductList = (props) => {
               <ProductItem
                 product={product}
                 key={index}
-                addToCart={props.context.addToCart}
+                addToCart={addToCart}
               />
             ))
           ) : (
@@ -36,4 +35,4 @@ const ProductList = (props) => {
   );
 };
 
-export default withContext(ProductList);
+export default ProductList;

@@ -1,7 +1,6 @@
 import React from 'react';
 
-const ProductItem = (props) => {
-  const { product } = props;
+const ProductItem = ({ product, addToCart }) => {
   return (
     <div className=" column is-half">
       <div className="box">
@@ -27,10 +26,10 @@ const ProductItem = (props) => {
             )}
             <div className="is-clearfix">
               <button
-                className="button is-small is-outlined is-primary   is-pulled-right"
+                className="button is-small is-outlined is-primary is-pulled-right"
                 onClick={() =>
-                  props.addToCart({
-                    id: product.name,
+                  addToCart({
+                    name: product.name,
                     product,
                     amount: 1,
                   })

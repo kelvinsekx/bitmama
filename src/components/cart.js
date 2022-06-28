@@ -1,10 +1,11 @@
-import React from 'react';
-import withContext from '../withContext';
+import React, { useContext } from 'react';
+import Context from './../context';
 import CartItem from './cartItem';
 
-const Cart = (props) => {
-  const { cart } = props.context;
-  const cartKeys = Object.keys(cart || {});
+const Cart = () => {
+  const { cart, clearCart, checkout, removeFromCart } =
+    useContext(Context);
+  const cartKeys = Object.keys(cart);
   return (
     <>
       <div className="hero is-primary">
@@ -21,21 +22,21 @@ const Cart = (props) => {
                 cartKey={key}
                 key={key}
                 cartItem={cart[key]}
-                removeFromCart={props.context.removeFromCart}
+                removeFromCart={removeFromCart}
               />
             ))}
             <div className="column is-12 is-clearfix">
               <br />
               <div className="is-pulled-right">
                 <button
-                  onClick={props.context.clearCart}
+                  onClick={clearCart}
                   className="button is-warning "
                 >
                   Clear cart
                 </button>{' '}
                 <button
                   className="button is-success"
-                  onClick={props.context.checkout}
+                  onClick={checkout}
                 >
                   Checkout
                 </button>
@@ -54,4 +55,4 @@ const Cart = (props) => {
   );
 };
 
-export default withContext(Cart);
+export default Cart;
