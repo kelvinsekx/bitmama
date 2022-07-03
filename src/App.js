@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 
 import AddProduct from './components/addProduct';
@@ -8,6 +8,7 @@ import ProductList from './components/productList';
 
 import Context from './context';
 import jwt_decode from 'jwt-decode';
+import { findUpdatedStock } from './utils';
 import axios from 'axios';
 
 const { Provider } = Context;
@@ -30,26 +31,20 @@ export default function App() {
 
       user = user ? JSON.parse(user) : null;
       cart = cart ? JSON.parse(cart) : {};
-      setState({
-        ...state,
+      setState((previousState) => ({
+        ...previousState,
         user,
         products: products.data,
         cart,
-      });
+      }));
     };
     initializeLogin();
   }, []);
 
-  // utility functions
-  const findUpdatedStock = (id) =>
-    state.products.findIndex((e) => e.id === id);
-
   const addProduct = (product, callback) => {
-    // rewrite --1
     let products = state.products.slice();
     products.push(product);
-    // end r--
-    setState({ products }, () => callback && callback());
+    setState({ ...state, products }, () => callback && callback());
   };
 
   const login = async (email, password) => {
@@ -88,7 +83,7 @@ export default function App() {
     const clonedState = { ...state };
     const { cart } = clonedState;
     if (cart[cartItem.name]) {
-      const updatedProductIndex = findUpdatedStock(
+      const updatedProductIndex = findUpdatedStock(state)(
         cartItem.product.id,
       );
       cart[cartItem.name].amount += cartItem.amount;
