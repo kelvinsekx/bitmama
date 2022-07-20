@@ -1,6 +1,6 @@
 import * as yup from 'yup';
 
-export const findUpdatedStock = (store) => (id) =>
+export const findItemInStore = (store) => (id) =>
   store.products.findIndex((e) => e.id === id);
 
 export const addProductSchema = yup
@@ -19,3 +19,11 @@ export const loginSchema = yup
     password: yup.string().required(),
   })
   .required();
+
+export const getRandomId = () =>
+  Math.random().toString(36).substring(2) + Date.now().toString(36);
+
+export const mapAttributeToData = (data) =>
+  data.map((e) => ({ id: e.id, ...e.attributes }));
+
+export const increment = (f) => f;

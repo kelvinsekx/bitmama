@@ -8,6 +8,7 @@ import axios from 'axios';
 
 import { addProductSchema as schema } from './../utils';
 import { Error } from './error';
+import { mapAttributeToData } from './../utils';
 
 const AddProduct = () => {
   const { addProduct, user } = useContext(Context);
@@ -42,26 +43,28 @@ const AddProduct = () => {
     description,
   }) => {
     if (name && price) {
-      const id =
-        Math.random().toString(36).substring(2) +
-        Date.now().toString(36);
+      const jwt = JSON.parse(localStorage.getItem('user')).token;
+      await axios
+        .post(
+          'http://localhost:1337/api/shops',
+          {
+            data: {
+              name,
+              price,
+              stock,
+              shortDesc,
+              description,
+            },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${jwt}`,
+            },
+          },
+        )
+        .then((res) => mapAttributeToData([res.data.data]))
+        .then((data) => data.map((e) => addProduct(e)));
 
-      await axios.post('http://localhost:3001/products', {
-        id,
-        name,
-        price,
-        stock,
-        shortDesc,
-        description,
-      });
-
-      addProduct({
-        name,
-        price,
-        shortDesc,
-        description,
-        stock: stock || 0,
-      });
       setState({
         resetForm: true,
         flash: {

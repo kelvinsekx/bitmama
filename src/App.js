@@ -7,8 +7,7 @@ import Login from './components/login';
 import ProductList from './components/productList';
 
 import Context from './context';
-import jwt_decode from 'jwt-decode';
-import { findUpdatedStock } from './utils';
+import { findItemInStore, mapAttributeToData } from './utils';
 import axios from 'axios';
 
 const { Provider } = Context;
@@ -20,13 +19,13 @@ export default function App() {
   });
   const navigate = useNavigate();
 
-  useEffect(function componentMount() {
+  useEffect(function onComponentMount() {
+    console.log('h');
     const initializeLogin = async () => {
-      // get the user and products
       let user = localStorage.getItem('user');
       let cart = localStorage.getItem('cart');
       const products = await axios.get(
-        'http://localhost:3001/products',
+        'http://localhost:1337/api/shops',
       );
 
       user = user ? JSON.parse(user) : null;
@@ -34,34 +33,33 @@ export default function App() {
       setState((previousState) => ({
         ...previousState,
         user,
-        products: products.data,
+        products: mapAttributeToData(products.data.data),
         cart,
       }));
     };
     initializeLogin();
   }, []);
 
-  const addProduct = (product, callback) => {
+  const addProduct = (product) => {
     let products = state.products.slice();
     products.push(product);
-    setState({ ...state, products }, () => callback && callback());
+    setState({ ...state, products });
+    return product;
   };
 
   const login = async (email, password) => {
     const res = await axios
-      .post('http://localhost:3001/login', { email: email, password })
-      .catch((res) => ({
-        status: 401,
-        message: 'Unauthorized',
-        err: res,
-      }));
+      .post('http://localhost:1337/api/auth/local', {
+        identifier: email,
+        password,
+      })
+      .catch((e) => e);
 
     if (res.status === 200) {
-      const { email } = jwt_decode(res.data.accessToken);
       const user = {
-        email,
-        token: res.data.accessToken,
-        accessLevel: email === 'admin@example.com' ? 0 : 1,
+        email: res.data.email,
+        token: res.data.jwt,
+        accessLevel: email ? 0 : 1,
       };
 
       setState({ ...state, user });
@@ -80,40 +78,55 @@ export default function App() {
   };
 
   const addToCart = (cartItem) => {
-    const clonedState = { ...state };
-    const { cart } = clonedState;
-    if (cart[cartItem.name]) {
-      const updatedProductIndex = findUpdatedStock(state)(
-        cartItem.product.id,
-      );
-      cart[cartItem.name].amount += cartItem.amount;
-      cart[cartItem.name].product.stock++;
-      clonedState.products[updatedProductIndex].stock--;
+    const { cart, products } = { ...state };
+    const { name, amount } = cartItem;
+
+    if (cart[name]) {
+      const itemInState = findItemInStore(state)(cartItem.product.id);
+      cart[name].amount += amount;
+      cart[name].product.stock++;
+      products[itemInState].stock--;
     } else {
-      cart[cartItem.name] = cartItem;
+      cart[name] = cartItem;
     }
 
-    if (
-      cart[cartItem.name].amount > cart[cartItem.name].product.stock
-    ) {
-      cart[cartItem.name].amount = cart[cartItem.name].product.stock;
+    if (cart[name].amount > cart[name].product.stock) {
+      cart[name].amount = cart[name].product.stock;
     }
     localStorage.setItem('cart', JSON.stringify(cart));
-    setState({ ...clonedState, cart });
+    setState({ ...state, cart });
+  };
+
+  const clearCart = () => {
+    let cart = {};
+    localStorage.removeItem('cart');
+    setState({ ...state, cart });
   };
 
   const checkout = () => {
     if (!state.user) {
       navigate('/login');
     }
-
+    const jwt = JSON.parse(localStorage.getItem('user')).token;
     const cart = state.cart;
 
     const products = state.products.map((p) => {
       if (cart[p.name]) {
         p.stock = p.stock - cart[p.name].amount;
 
-        axios.put(`http://localhost:3001/products/${p.id}`, { ...p });
+        axios.put(
+          `http://localhost:1337/api/shops/${p.id}`,
+          {
+            data: {
+              ...p,
+            },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${jwt}`,
+            },
+          },
+        );
       }
       return p;
     });
@@ -128,12 +141,6 @@ export default function App() {
     localStorage.setItem('cart', JSON.stringify(cart));
     setState({ ...state, cart });
     return cartItemId;
-  };
-
-  const clearCart = () => {
-    let cart = {};
-    localStorage.removeItem('cart');
-    setState({ ...state, cart });
   };
 
   return (
